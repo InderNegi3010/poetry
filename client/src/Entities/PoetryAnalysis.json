@@ -1,0 +1,34 @@
+{
+  "name": "PoetryAnalysis",
+  "type": "object",
+  "properties": {
+    "input_text": {
+      "type": "string",
+      "description": "Original poetry text input"
+    },
+    "detected_language": {
+      "type": "string",
+      "enum": [
+        "devanagari",
+        "hinglish",
+        "mixed"
+      ],
+      "description": "Detected script/language of input"
+    },
+    "analysis_result": {
+      "type": "object",
+      "description": "Complete analysis results"
+    },
+    "meter_pattern": {
+      "type": "string",
+      "description": "Detected meter pattern"
+    },
+    "confidence_score": {
+      "type": "number",
+      "description": "Analysis confidence (0-1)"
+    }
+  },
+  "required": [
+    "input_text"
+  ]
+}

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rekhta Feedback</title>
+
+    <!-- Simple language switcher script -->
+    <script type="text/javascript">
+      // Global variables
+      window.googleTranslateInstance = null;
+      window.isTranslateLoading = false;
+
+      // Direct language switching function
+      function doGTranslate(lang_pair) {
+        if (lang_pair.value) lang_pair = lang_pair.value;
+        if (lang_pair == "") return;
+        var lang = lang_pair.split("|")[1];
+        var teCombo = document.querySelector(".goog-te-combo");
+        if (teCombo) {
+          console.log("Found translate combo, setting to:", lang);
+          teCombo.value = lang;
+          if (document.createEvent) {
+            var event = document.createEvent("HTMLEvents");
+            event.initEvent("change", true, true);
+            teCombo.dispatchEvent(event);
+          } else {
+            teCombo.fireEvent("onchange");
+          }
+
+          // Trigger UI refresh
+          setTimeout(() => {
+            window.dispatchEvent(new Event("resize"));
+          }, 500);
+
+          return true;
+        } else {
+          console.log("Translate combo not found, creating it");
+          // If combo not found, create it
+          createGoogleTranslate();
+          setTimeout(function () {
+            doGTranslate(lang_pair);
+          }, 500);
+          return false;
+        }
+      }
+
+      function createGoogleTranslate() {
+        var gtElement = document.getElementById("google_translate_element");
+        if (!gtElement) {
+          gtElement = document.createElement("div");
+          gtElement.id = "google_translate_element";
+          gtElement.style.display = "none";
+          document.body.appendChild(gtElement);
+
+          // Initialize if not already done
+          googleTranslateElementInit();
+        }
+      }
+
+      // Initialize Google Translate
+      function googleTranslateElementInit() {
+        console.log("googleTranslateElementInit called");
+
+        if (window.isTranslateLoading) {
+          console.log("Translation already initializing");
+          return;
+        }
+
+        if (typeof google === "undefined" || !google.translate) {
+          console.log("Google Translate API not available, retrying in 500ms");
+          setTimeout(googleTranslateElementInit, 500);
+          return;
+        }
+
+        window.isTranslateLoading = true;
+
+        try {
+          console.log("Initializing Google Translate...");
+          window.googleTranslateInstance =
+            new google.translate.TranslateElement(
+              {
+                pageLanguage: "en",
+                includedLanguages: "en,hi,ur",
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false,
+              },
+              "google_translate_element"
+            );
+
+          console.log("Google Translate initialized successfully");
+          window.isTranslateLoading = false;
+
+          // Dispatch custom event to notify React
+          window.dispatchEvent(new CustomEvent("googleTranslateReady"));
+
+          // Trigger UI refresh
+          setTimeout(() => {
+            window.dispatchEvent(new Event("resize"));
+          }, 500);
+        } catch (error) {
+          console.error("Error initializing Google Translate:", error);
+          window.isTranslateLoading = false;
+
+          // Retry after delay
+          setTimeout(googleTranslateElementInit, 1000);
+        }
+      }
+
+      // Make function globally available
+      window.changeLanguage = function (langCode) {
+        console.log("changeLanguage called with:", langCode);
+        return doGTranslate("en|" + langCode);
+      };
+
+      // Initialize on page load
+      window.addEventListener("DOMContentLoaded", createGoogleTranslate);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="google_translate_element" style="display: none"></div>
+    <!-- Load Google Translate API once -->
+    <script
+      type="text/javascript"
+      src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+      async
+    ></script>
+    <script type="module" src="/src/main.jsx"></script>
+    <!-- Styling to hide Google Translate artifacts -->
+    <style>
+      /* Hide Google Translate visual artifacts */
+      .goog-te-banner-frame.skiptranslate,
+      .goog-te-ftab,
+      #goog-gt-tt,
+      .goog-te-balloon-frame,
+      .goog-te-spinner-pos {
+        display: none !important;
+        visibility: hidden !important;
+      }
+
+      body {
+        top: 0px !important;
+        position: static !important;
+      }
+
+      /* Hide the default Google Translate widget */
+      .goog-te-gadget-simple {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        font-size: 0 !important;
+      }
+
+      .goog-te-gadget-simple .goog-te-menu-value {
+        color: transparent !important;
+        font-size: 0 !important;
+      }
+
+      .goog-te-gadget-simple .goog-te-menu-value:before {
+        content: "";
+        font-size: 0;
+      }
+
+      /* Keep the translate element completely hidden */
+      #google_translate_element {
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+
+      /* Prevent transitions during translation to avoid visual glitches */
+      body.goog-te-translated * {
+        transition: none !important;
+        -webkit-transition: none !important;
+        -moz-transition: none !important;
+        -o-transition: none !important;
+      }
+    </style>
+  </body>
+</html>

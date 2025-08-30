@@ -1,3 +1,5 @@
+import { analyzePoem, quickAnalyze } from './taqtiEngine.js';
+
 class HindiAnalyzer {
   // Enhanced syllable extraction matching classical Devanagari prosody
   static extractHindiSyllables(text) {
@@ -591,7 +593,7 @@ class HindiAnalyzer {
     return this.detectBahrPattern(syllableAnalysis);
   }
 
-  // Main analysis function
+  // Enhanced analysis using Taqti engine
   static analyze(text) {
     if (!text?.trim()) {
       return {
@@ -603,12 +605,10 @@ class HindiAnalyzer {
     }
     
     const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-    let allSyllableAnalysis = [];
     let hasAnyErrors = false;
     
-    // Create line-by-line analysis
+    // Check for invalid characters first
     const lineResults = [];
-    
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       // For Hindi: English letters (a-z, A-Z) or numbers (0-9) are invalid
@@ -618,46 +618,106 @@ class HindiAnalyzer {
         hasAnyErrors = true;
       }
       
-      // Add to line results for display
       lineResults.push({
         text: line,
         valid: !hasInvalidChars,
         lineNumber: i + 1
       });
-      
-      // Process syllables for valid lines
-      if (!hasInvalidChars) {
-        const syllables = this.extractHindiSyllables(line);
-        const meterAnalysis = this.analyzeSyllableWeights(syllables);
-        const sections = this.applyMeterPattern(syllables);
-        
-        const lineAnalysis = {
-          line: line.trim(),
-          syllables: syllables,
-          syllableAnalysis: meterAnalysis.analysis,
-          sections: sections,
-          errors: meterAnalysis.errors,
-          hasErrors: false,
-          totalSyllables: syllables.length,
-          lineNumber: i + 1
-        };
-        
-        allSyllableAnalysis.push(lineAnalysis);
-      }
     }
     
-    // If there are invalid characters, return error with line-by-line format
+    // If there are invalid characters, return error
     if (hasAnyErrors) {
       return {
         status: "error",
         message: "The system could not match the Bahr in the highlighted lines",
         lines: lineResults,
         errorMessage: "The system could not match the Bahr in the highlighted lines",
-        syllableAnalysis: allSyllableAnalysis
+        syllableAnalysis: []
       };
     }
     
-    // All lines are valid - detect meter pattern
+    // Use Taqti engine for enhanced analysis
+    try {
+      const taqtiResult = analyzePoem(text);
+      
+      if (taqtiResult.error) {
+        // Fallback to original analysis
+        return this.fallbackAnalysis(text);
+      }
+      
+      // Convert Taqti result to expected format
+      const syllableAnalysis = taqtiResult.lines.map(lineData => ({
+        line: lineData.line,
+        syllables: lineData.syllables || [],
+        syllableAnalysis: lineData.syllableAnalysis?.map(syl => ({
+          syllable: syl.syllable,
+          weight: syl.weight.toString(),
+          isError: false,
+          errorType: null
+        })) || [],
+        sections: this.applyMeterPattern(lineData.syllables || []),
+        errors: [],
+        hasErrors: false,
+        totalSyllables: lineData.totalSyllables || 0,
+        lineNumber: lineData.lineNumber
+      }));
+      
+      const bestMatch = taqtiResult.overallMeter?.bestMatch;
+      
+      return {
+        status: "success",
+        message: "आप की रचना निम्नलिखित बहर में है:",
+        bahrType: bestMatch?.name || "मिश्रित छंद",
+        meterDescription: bestMatch?.description || "विशेष पैटर्न",
+        pattern: taqtiResult.overallMeter?.pattern ? [taqtiResult.overallMeter.pattern] : [],
+        lines: lineResults,
+        syllableAnalysis: syllableAnalysis,
+        taqtiAnalysis: taqtiResult // Include full Taqti analysis
+      };
+      
+    } catch (error) {
+      console.error('Taqti engine error:', error);
+      // Fallback to original analysis
+      return this.fallbackAnalysis(text);
+    }
+  }
+  
+  // Fallback to original analysis method
+  static fallbackAnalysis(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+    let allSyllableAnalysis = [];
+    
+    // Create line-by-line analysis using original method
+    const lineResults = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      lineResults.push({
+        text: line,
+        valid: true,
+        lineNumber: i + 1
+      });
+      
+      const syllables = this.extractHindiSyllables(line);
+      const meterAnalysis = this.analyzeSyllableWeights(syllables);
+      const sections = this.applyMeterPattern(syllables);
+      
+      const lineAnalysis = {
+        line: line.trim(),
+        syllables: syllables,
+        syllableAnalysis: meterAnalysis.analysis,
+        sections: sections,
+        errors: meterAnalysis.errors,
+        hasErrors: false,
+        totalSyllables: syllables.length,
+        lineNumber: i + 1
+      };
+      
+      allSyllableAnalysis.push(lineAnalysis);
+    }
+    
+    // Detect meter pattern using original method
     const meterInfo = this.detectMeterPattern(allSyllableAnalysis);
     
     return {

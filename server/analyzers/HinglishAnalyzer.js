@@ -1,7 +1,7 @@
 import { analyzePoem, quickAnalyze } from './taqtiEngine.js';
 
 class HinglishAnalyzer {
-  // Enhanced syllable extraction matching Rekhta's algorithm
+  // Optimized syllable extraction algorithm for Hinglish
   static extractHinglishSyllables(text) {
     if (!text || typeof text !== 'string') return [];
     
@@ -9,7 +9,7 @@ class HinglishAnalyzer {
     const cleanText = text.toLowerCase().replace(/[^\u0900-\u097Fa-zḌḍṭṇṛṣśḥāīūēōḥṃṅñṭḍṇḷṛṣ\s]/g, '').trim();
     if (!cleanText) return [];
     
-    // Enhanced manual mappings based on exact Rekhta patterns
+    // Optimized manual mappings with more common Hinglish words and patterns
     const manualMappings = {
       // Complete lines from Rekhta examples with exact syllable breaks
       'mere kamre men ik aisi khiḌki hai': ['me', 're', 'kam', 're', 'men', 'ik', 'ai', 'si', 'khi', 'Ḍki', 'hai'],
@@ -17,48 +17,119 @@ class HinglishAnalyzer {
       'aise tevar dushman hi hote hain': ['ai', 'se', 'te', 'var', 'dush', 'man', 'hi', 'ho', 'te', 'hain'],
       'pata karo ye laḌki kis ki beTi hai': ['pa', 'ta', 'ka', 'ro', 'ye', 'laḌ', 'ki', 'kis', 'ki', 'be', 'Ti', 'hai'],
       
+      // Common pronouns and conjunctions
+      'main': ['main'],
+      'mein': ['mein'],
+      'hum': ['hum'],
+      'tum': ['tum'],
+      'aap': ['aap'],
+      'woh': ['woh'],
+      'yeh': ['yeh'],
+      'ye': ['ye'],
+      'jo': ['jo'],
+      'ki': ['ki'],
+      'ka': ['ka'],
+      'ke': ['ke'],
+      'se': ['se'],
+      'ko': ['ko'],
+      'par': ['par'],
+      'aur': ['aur'],
+      'ya': ['ya'],
+      'to': ['to'],
+      'hi': ['hi'],
+      'bhi': ['bhi'],
+      'na': ['na'],
+      'ne': ['ne'],
+      'pe': ['pe'],
+      'tak': ['tak'],
+      
+      // Common verbs
+      'hai': ['hai'],
+      'hain': ['hain'],
+      'tha': ['tha'],
+      'the': ['the'],
+      'thi': ['thi'],
+      'hoga': ['ho', 'ga'],
+      'karna': ['kar', 'na'],
+      'karo': ['ka', 'ro'],
+      'karta': ['kar', 'ta'],
+      'karti': ['kar', 'ti'],
+      'karte': ['kar', 'te'],
+      'kiya': ['ki', 'ya'],
+      'kiye': ['ki', 'ye'],
+      'hona': ['ho', 'na'],
+      'hota': ['ho', 'ta'],
+      'hoti': ['ho', 'ti'],
+      'hote': ['ho', 'te'],
+      'hua': ['hu', 'a'],
+      'hui': ['hu', 'i'],
+      'hue': ['hu', 'e'],
+      'jana': ['ja', 'na'],
+      'jata': ['ja', 'ta'],
+      'jati': ['ja', 'ti'],
+      'jate': ['ja', 'te'],
+      'gaya': ['ga', 'ya'],
+      'gayi': ['ga', 'yi'],
+      'gaye': ['ga', 'ye'],
+      'aana': ['aa', 'na'],
+      'aata': ['aa', 'ta'],
+      'aati': ['aa', 'ti'],
+      'aate': ['aa', 'te'],
+      'aaya': ['aa', 'ya'],
+      'aayi': ['aa', 'yi'],
+      'aaye': ['aa', 'ye'],
+      'dena': ['de', 'na'],
+      'deta': ['de', 'ta'],
+      'deti': ['de', 'ti'],
+      'dete': ['de', 'te'],
+      'diya': ['di', 'ya'],
+      'diyi': ['di', 'yi'],
+      'diye': ['di', 'ye'],
+      'lena': ['le', 'na'],
+      'leta': ['le', 'ta'],
+      'leti': ['le', 'ti'],
+      'lete': ['le', 'te'],
+      'liya': ['li', 'ya'],
+      'liyi': ['li', 'yi'],
+      'liye': ['li', 'ye'],
+      
       // Individual word mappings with prosodic accuracy
       'mere': ['me', 're'],
       'kamre': ['kam', 're'], 
       'men': ['men'],
       'ik': ['ik'],
+      'ek': ['ek'],
       'aisi': ['ai', 'si'],
       'khiḌki': ['khi', 'Ḍki'],
-      'hai': ['hai'],
-      'hain': ['hain'],
-      'jo': ['jo'],
       'in': ['in'],
       'ankhon': ['an', 'khon'],
-      'ke': ['ke'],
       'khulne': ['khul', 'ne'],
-      'par': ['par'],
       'khulti': ['khul', 'ti'],
       'aise': ['ai', 'se'],
       'tevar': ['te', 'var'],
       'dushman': ['dush', 'man'],
-      'hi': ['hi'],
-      'hote': ['ho', 'te'],
       'pata': ['pa', 'ta'],
-      'karo': ['ka', 'ro'],
-      'ye': ['ye'],
       'laḌki': ['laḌ', 'ki'],
       'kis': ['kis'],
-      'ki': ['ki'],
       'beTi': ['be', 'Ti'],
       
-      // Extended common words
-      'mohabbat': ['mo', 'hab', 'bat'],
-      'ishq': ['ishq'],
+      // Common nouns
       'dil': ['dil'],
+      'jaan': ['jaan'],
       'pyar': ['py', 'ar'],
+      'ishq': ['ishq'],
+      'mohabbat': ['mo', 'hab', 'bat'],
       'zindagi': ['zin', 'da', 'gi'],
       'duniya': ['du', 'ni', 'ya'],
       'khushi': ['khu', 'shi'],
       'gham': ['gham'],
+      'dard': ['dard'],
       'aansu': ['aan', 'su'],
       'muskaan': ['mus', 'kaan'],
       'sapna': ['sap', 'na'],
-      'haqeeqat': ['ha', 'qee', 'qat'],
+      'khwaab': ['khwaab'],
+      'umeed': ['u', 'meed'],
+      'ummeed': ['um', 'meed'],
       'umang': ['u', 'mang'],
       'josh': ['josh'],
       'junoon': ['ju', 'noon'],
@@ -74,27 +145,77 @@ class HinglishAnalyzer {
       'tamanna': ['ta', 'man', 'na'],
       'hasrat': ['has', 'rat'],
       'arzoo': ['ar', 'zoo'],
-      'khwaab': ['khwaab'],
+      'haqeeqat': ['ha', 'qee', 'qat'],
+      'waqt': ['waqt'],
+      'samay': ['sa', 'may'],
+      'pal': ['pal'],
+      'lamha': ['lam', 'ha'],
+      'din': ['din'],
+      'raat': ['raat'],
+      'subah': ['su', 'bah'],
+      'shaam': ['shaam'],
+      'asman': ['as', 'man'],
+      'zameen': ['za', 'meen'],
+      'chand': ['chand'],
+      'sitare': ['si', 'ta', 're'],
+      'suraj': ['su', 'raj'],
+      'chaand': ['chaand'],
+      'taare': ['taa', 're'],
+      'roshni': ['rosh', 'ni'],
+      'andhera': ['an', 'dhe', 'ra'],
+      
+      // Common adjectives
+      'accha': ['ac', 'cha'],
+      'bura': ['bu', 'ra'],
+      'sundar': ['sun', 'dar'],
+      'pyara': ['pya', 'ra'],
+      'meetha': ['mee', 'tha'],
+      'kadwa': ['kad', 'wa'],
+      'thanda': ['than', 'da'],
+      'garam': ['ga', 'ram'],
+      'lamba': ['lam', 'ba'],
+      'chota': ['cho', 'ta'],
+      'bada': ['ba', 'da'],
+      'naya': ['na', 'ya'],
+      'purana': ['pu', 'ra', 'na'],
+      
+      // English words commonly used in Hinglish
+      'life': ['life'],
+      'love': ['love'],
+      'time': ['time'],
+      'heart': ['heart'],
+      'soul': ['soul'],
+      'mind': ['mind'],
+      'dream': ['dream'],
       'reality': ['re', 'a', 'li', 'ty'],
       'beautiful': ['beau', 'ti', 'ful'],
       'romantic': ['ro', 'man', 'tic'],
-      'fantastic': ['fan', 'tas', 'tic']
+      'fantastic': ['fan', 'tas', 'tic'],
+      'amazing': ['a', 'ma', 'zing'],
+      'awesome': ['awe', 'some'],
+      'perfect': ['per', 'fect']
     };
+    
+    // Cache for previously processed words
+    const wordSyllableCache = new Map();
     
     // Check for exact text match first
     if (manualMappings[cleanText]) {
       return manualMappings[cleanText];
     }
     
-    // Word-by-word processing
+    // Word-by-word processing with caching
     const words = cleanText.split(/\s+/);
     let allSyllables = [];
     
     for (const word of words) {
       if (manualMappings[word]) {
         allSyllables = allSyllables.concat(manualMappings[word]);
+      } else if (wordSyllableCache.has(word)) {
+        allSyllables = allSyllables.concat(wordSyllableCache.get(word));
       } else {
         const wordSyllables = this.extractWordSyllables(word);
+        wordSyllableCache.set(word, wordSyllables);
         allSyllables = allSyllables.concat(wordSyllables);
       }
     }
@@ -102,7 +223,7 @@ class HinglishAnalyzer {
     return allSyllables;
   }
   
-  // Enhanced word-level syllable extraction
+  // Optimized word-level syllable extraction
   static extractWordSyllables(word) {
     if (!word) return [];
     
@@ -111,7 +232,26 @@ class HinglishAnalyzer {
       return this.extractDevanagariSyllables(word);
     }
     
-    // Enhanced Roman script processing
+    // Common Hinglish syllable patterns
+    const commonPatterns = {
+      // CV patterns (consonant + vowel)
+      'CV': /^[bcdfghjklmnpqrstvwxyzḌḍṭṇṛṣśḥṃṅñṭḍṇḷṛṣ][aeiouāīūēōḥ]$/i,
+      // CVC patterns (consonant + vowel + consonant)
+      'CVC': /^[bcdfghjklmnpqrstvwxyzḌḍṭṇṛṣśḥṃṅñṭḍṇḷṛṣ][aeiouāīūēōḥ][bcdfghjklmnpqrstvwxyzḌḍṭṇṛṣśḥṃṅñṭḍṇḷṛṣ]$/i,
+      // VC patterns (vowel + consonant)
+      'VC': /^[aeiouāīūēōḥ][bcdfghjklmnpqrstvwxyzḌḍṭṇṛṣśḥṃṅñṭḍṇḷṛṣ]$/i,
+      // V patterns (vowel only)
+      'V': /^[aeiouāīūēōḥ]$/i
+    };
+    
+    // Check if word matches a common pattern
+    for (const [pattern, regex] of Object.entries(commonPatterns)) {
+      if (regex.test(word)) {
+        return [word];
+      }
+    }
+    
+    // Enhanced Roman script processing for complex words
     const syllables = [];
     const vowels = 'aeiouAEIOUāīūēōḥ';
     const consonants = 'bcdfghjklmnpqrstvwxyzḌḍṭṇṛṣśḥṃṅñṭḍṇḷṛṣ';
@@ -245,11 +385,21 @@ class HinglishAnalyzer {
     return syllables;
   }
 
-  // Accurate prosodic weight calculation based on classical rules
+  // Optimized prosodic weight calculation based on classical rules
   static calculateSyllableWeight(syllable) {
     if (!syllable) return 1;
     
     const syl = syllable.toLowerCase();
+    
+    // Cache for frequently calculated syllable weights
+    if (!this.weightCache) {
+      this.weightCache = new Map();
+    }
+    
+    // Check cache first
+    if (this.weightCache.has(syl)) {
+      return this.weightCache.get(syl);
+    }
     
     // Definitely long (weight = 2) patterns
     const longPatterns = [
@@ -261,6 +411,7 @@ class HinglishAnalyzer {
       // Nasalized vowels
       /[aeiou][ṃṅñ]/,
       /[aeiou]n$/,
+      /[aeiou]m$/,
       
       // Vowel + consonant cluster
       /[aeiou][bcdfghjklmnpqrstvwxyz]{2,}/,
@@ -278,28 +429,63 @@ class HinglishAnalyzer {
     // Check for long patterns
     for (const pattern of longPatterns) {
       if (pattern.test(syl)) {
+        this.weightCache.set(syl, 2);
         return 2;
       }
     }
     
-    // Special known long syllables
+    // Special known long syllables - expanded list
     const knownLongSyllables = [
-      'hain', 'main', 'kaan', 'jaan', 'yaar', 'haar', 'maar', 'taar', 'saar',
+      // Common long syllables
+      'hain', 'main', 'mein', 'kaan', 'jaan', 'yaar', 'haar', 'maar', 'taar', 'saar',
       'gham', 'josh', 'ishq', 'khwaab', 'saab', 'kaab', 'raab', 'taab',
       'dil', 'fil', 'mil', 'til', 'sil', 'kil', 'pil',
-      'men', 'ten', 'yen', 'zen', 'hen', 'den', 'sen'
+      'men', 'ten', 'yen', 'zen', 'hen', 'den', 'sen',
+      
+      // Additional long syllables
+      'pyaar', 'raat', 'baat', 'jeet', 'meet', 'geet', 'preet',
+      'dard', 'mard', 'gard', 'sard', 'ward',
+      'aag', 'raag', 'baag', 'daag', 'saag',
+      'aaj', 'raaj', 'kaaj', 'saaj', 'taaj',
+      'aas', 'raas', 'paas', 'daas', 'maas',
+      'aan', 'baan', 'jaan', 'maan', 'taan',
+      'aam', 'naam', 'kaam', 'daam', 'shaam',
+      'aab', 'naab', 'baab', 'saab', 'raab',
+      'aad', 'yaad', 'baad', 'shaad', 'naad',
+      'aaf', 'maaf', 'saaf', 'kaaf', 'laaf',
+      'aah', 'raah', 'maah', 'shaah', 'vaah',
+      'aakh', 'raakh', 'saakh', 'laakh', 'daakh',
+      'aal', 'saal', 'taal', 'jaal', 'maal',
+      'aan', 'shaan', 'jaan', 'maan', 'baan',
+      'aap', 'paap', 'maap', 'saap', 'taap',
+      'aar', 'saar', 'taar', 'yaar', 'paar',
+      'aas', 'raas', 'paas', 'maas', 'daas',
+      'aat', 'baat', 'raat', 'jaat', 'saat',
+      'aaz', 'naaz', 'raaz', 'saaz', 'baaz',
+      
+      // Common English words used in Hinglish
+      'life', 'love', 'time', 'heart', 'soul', 'mind', 'dream'
     ];
     
     if (knownLongSyllables.includes(syl)) {
+      this.weightCache.set(syl, 2);
       return 2;
     }
     
     // Syllables ending in consonant clusters
     if (/[bcdfghjklmnpqrstvwxyz]{2,}$/.test(syl)) {
+      this.weightCache.set(syl, 2);
+      return 2;
+    }
+    
+    // Syllables with specific consonant-vowel patterns
+    if (/^[bcdfghjklmnpqrstvwxyz][aeiou][bcdfghjklmnpqrstvwxyz]$/.test(syl)) {
+      this.weightCache.set(syl, 2);
       return 2;
     }
     
     // Default to short (weight = 1)
+    this.weightCache.set(syl, 1);
     return 1;
   }
   
@@ -414,7 +600,7 @@ class HinglishAnalyzer {
     return /[0-9०-९@#$%^&*()+=\[\]{}|\\:";'<>?,./]/.test(line);
   }
 
-  // Enhanced meter pattern detection matching Rekhta format
+  // Enhanced meter pattern detection matching Hindi analyzer format
   static detectHinglishMeterPattern(syllableAnalysis) {
     if (!syllableAnalysis || syllableAnalysis.length === 0) {
       return {
@@ -450,14 +636,16 @@ class HinglishAnalyzer {
       }
     }
     
-    // Return Rekhta-style dynamic bahr detection
+    // Return Hindi-style dynamic bahr detection
     const firstLinePattern = firstLine.syllables.map(syl => this.calculateSyllableWeight(syl)).join('');
     
     if (isConsistent) {
       // All lines have same matra count - try to get classical bahr name
       const classicalBahr = this.getClassicalBahrName(firstLineMatras, firstLinePattern);
+      
+      // Format the output to match Hindi analyzer format
       return {
-        name: classicalBahr.name,
+        name: `आप की रचना निम्नलिखित बह्र में है:\n ${classicalBahr.name}\n\n ${classicalBahr.desc}\n ${firstLinePattern}`,
         desc: classicalBahr.desc,
         pattern: [firstLinePattern]
       };
@@ -479,13 +667,16 @@ class HinglishAnalyzer {
       // Try to get classical name for most common pattern
       const classicalBahr = this.getClassicalBahrName(mostCommonMatras, mostCommonPattern);
       
+      const patternStrings = allLinesPattern.map(line => {
+        const lineWeights = syllableAnalysis.find(s => s.totalSyllables === line.syllableCount);
+        return lineWeights ? lineWeights.syllables.map(syl => this.calculateSyllableWeight(syl)).join('') : line.matras.toString();
+      });
+      
+      // Format the output to match Hindi analyzer format
       return {
-        name: classicalBahr.name,
+        name: `आप की रचना निम्नलिखित बह्र में है:\n ${classicalBahr.name}\n\n ${classicalBahr.desc}\n ${patternStrings.join('\n ')}`,
         desc: classicalBahr.desc,
-        pattern: allLinesPattern.map(line => {
-          const lineWeights = syllableAnalysis.find(s => s.totalSyllables === line.syllableCount);
-          return lineWeights ? lineWeights.syllables.map(syl => this.calculateSyllableWeight(syl)).join('') : line.matras.toString();
-        })
+        pattern: patternStrings
       };
     }
   }

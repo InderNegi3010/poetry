@@ -416,8 +416,8 @@ class HinglishAnalyzer {
   static detectHinglishMeterPattern(syllableAnalysis) {
     if (!syllableAnalysis || syllableAnalysis.length === 0) {
       return {
-        bahrType: "मिश्रित बहर",
-        meterDescription: "fe'lun fe'lun",
+        name: "मिश्रित बहर",
+        desc: "fe'lun fe'lun",
         pattern: ["22", "22"]
       };
     }
@@ -449,18 +449,22 @@ class HinglishAnalyzer {
     }
     
     // Return Rekhta-style dynamic bahr detection
+    const firstLinePattern = firstLine.syllables.map(syl => this.calculateSyllableWeight(syl)).join('');
+    
     if (isConsistent) {
-      // All lines have same matra count - use matra-based naming
+      // All lines have same matra count - try to get classical bahr name
+      const classicalBahr = this.getClassicalBahrName(firstLineMatras, firstLinePattern);
       return {
-        bahrType: `${firstLineMatras} मात्रिक छंद`,
-        meterDescription: this.getHinglishMeterDescription(firstLineMatras),
-        pattern: firstLine.sections ? firstLine.sections.map(section => section.weights.join('')) : ["22"]
+        name: classicalBahr.name,
+        desc: classicalBahr.desc,
+        pattern: [firstLinePattern]
       };
     } else {
-      // Mixed matra count - find most common matra count and use that (like Rekhta)
+      // Mixed matra count - find most common pattern
       const matraCounts = {};
       let maxCount = 0;
       let mostCommonMatras = firstLineMatras;
+      let mostCommonPattern = firstLinePattern;
       
       for (const lineData of allLinesPattern) {
         matraCounts[lineData.matras] = (matraCounts[lineData.matras] || 0) + 1;
@@ -470,18 +474,135 @@ class HinglishAnalyzer {
         }
       }
       
-      // Use the most common matra count for naming (like Rekhta)
+      // Try to get classical name for most common pattern
+      const classicalBahr = this.getClassicalBahrName(mostCommonMatras, mostCommonPattern);
+      
       return {
-        bahrType: `${mostCommonMatras} मात्रिक छंद`,
-        meterDescription: "विशेष पैटर्न",
-        pattern: allLinesPattern.map(line => line.matras.toString())
+        name: classicalBahr.name,
+        desc: classicalBahr.desc,
+        pattern: allLinesPattern.map(line => {
+          const lineWeights = syllableAnalysis.find(s => s.totalSyllables === line.syllableCount);
+          return lineWeights ? lineWeights.syllables.map(syl => this.calculateSyllableWeight(syl)).join('') : line.matras.toString();
+        })
       };
     }
   }
   
-  // Get Hinglish meter description based on matra count
-  static getHinglishMeterDescription(matraCount) {
-    const descriptions = {
+  // Get classical bahr name based on matra count and pattern
+  static getClassicalBahrName(matraCount, patternString = '') {
+    // Classical Hinglish bahr patterns with Urdu names
+    const classicalPatterns = {
+      14: {
+        '21222122212221': { name: 'बहर-ए-हज़ज', desc: 'मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन' },
+        '22122212221221': { name: 'बहर-ए-रमल', desc: 'फ़ाइलातुन मफ़ाइलुन फ़ाइलातुन मफ़ाइलुन' }
+      },
+      15: {
+        '212221222122212': { name: 'बहर-ए-हज़ज मुसम्मन', desc: 'मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन फ़ा' },
+        '221221222122122': { name: 'बहर-ए-रमल मुसम्मन', desc: 'फ़ाइलातुन मफ़ाइलुन फ़ाइलातुन मफ़ाइलुन' }
+      },
+      16: {
+        '2122212221222122': { name: 'बहर-ए-हज़ज मुसद्दस', desc: 'मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन मफ़ऊ' },
+        '2212212221222122': { name: 'बहर-ए-रमल मुसद्दस', desc: 'फ़ाइलातुन मफ़ाइलुन फ़ाइलातुन मफ़ाइलुन फ़ा' }
+      },
+      18: {
+        '212221222122212221': { name: 'बहर-ए-हज़ज मुसम्मन सालिम', desc: 'मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन' },
+        '221221222122122122': { name: 'बहर-ए-रमल मुसम्मन सालिम', desc: 'फ़ाइलातुन मफ़ाइलुन फ़ाइलातुन मफ़ाइलुन फ़ाइ' }
+      },
+      19: {
+        '2122212221222122212': { name: 'बहर-ए-हज़ज मुतक़ारिब', desc: 'मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन फ़ा' }
+      },
+      20: {
+        '21222122212221222122': { name: 'बहर-ए-हज़ज मुसम्मन मुकम्मल', desc: 'मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ा' },
+        '22122122212221222122': { name: 'बहर-ए-रमल मुसम्मन मुकम्मल', desc: 'फ़ाइलातुन मफ़ाइलुन फ़ाइलातुन मफ़ाइलुन फ़ाइलातुन' }
+      },
+      22: {
+        '2122212221222122212221': { name: 'बहर-ए-हज़ज मुसम्मन ज़ाइद', desc: 'मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन' }
+      },
+      24: {
+        '212221222122212221222122': { name: 'बहर-ए-हज़ज मुसम्मन कामिल', desc: 'मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन मफ़ऊलुन मफ़ाइलुन मफ़ा' }
+      }
+    };
+
+    // Try exact pattern match first
+    if (classicalPatterns[matraCount] && classicalPatterns[matraCount][patternString]) {
+      return classicalPatterns[matraCount][patternString];
+    }
+
+    // Try fuzzy matching for similar patterns
+    if (classicalPatterns[matraCount]) {
+      for (const [pattern, info] of Object.entries(classicalPatterns[matraCount])) {
+        if (this.fuzzyPatternMatch(patternString, pattern)) {
+          return { name: info.name + ' (अनुमानित)', desc: info.desc };
+        }
+      }
+    }
+
+    // Fallback to matra-based naming
+    return {
+      name: `${matraCount} मात्रिक छंद`,
+      desc: matraCount <= 16 ? 'लघु छंद' : matraCount <= 20 ? 'मध्यम छंद' : 'दीर्घ छंद'
+    };
+  }
+
+  // Fuzzy pattern matching for approximate matches
+  static fuzzyPatternMatch(pattern1, pattern2, threshold = 0.8) {
+    if (!pattern1 || !pattern2) return false;
+    
+    const maxLength = Math.max(pattern1.length, pattern2.length);
+    let matches = 0;
+    
+    for (let i = 0; i < maxLength; i++) {
+      if (pattern1[i] === pattern2[i]) {
+        matches++;
+      }
+    }
+    
+    return (matches / maxLength) >= threshold;
+  }
+
+  // Get Hinglish meter description based on matra count and pattern
+  static getHinglishMeterDescription(matraCount, patternString = '') {
+    // Classical Hinglish bahr patterns
+    const classicalPatterns = {
+      14: {
+        '21222122212221': {
+          name: "मोक़तज़िब मुसम्मन मतवी मकतूफ़",
+          desc: "फ़ाइलात मफ़ऊलुन फ़ाइलात मफ़ऊलुन"
+        }
+      },
+      16: {
+        '21212121': {
+          name: "मुतकारिब मुसम्मन महज़ूफ़",
+          desc: "फ़इलुन फ़इलुन फ़इलुन फ़इलुन"
+        }
+      },
+      18: {
+        '212121212': {
+          name: "रमल मुसम्मन महज़ूफ़", 
+          desc: "फ़ाइलातुन फ़ाइलातुन फ़ाइलुन"
+        }
+      },
+      20: {
+        '21212121212': {
+          name: "रमल मुसम्मन सालिम",
+          desc: "फ़ाइलातुन फ़ाइलातुन फ़ाइलातुन"
+        }
+      },
+      24: {
+        '212122212122': {
+          name: "मुज्तस मुसम्मन मख़बून महज़ूफ़",
+          desc: "मुफ़ाइलुन फ़इलातुन मुफ़ाइलुन फ़ेलुन"
+        }
+      }
+    };
+    
+    // Check for exact pattern match
+    if (classicalPatterns[matraCount] && classicalPatterns[matraCount][patternString]) {
+      return classicalPatterns[matraCount][patternString].desc;
+    }
+    
+    // Fallback descriptions
+    const fallbackDescriptions = {
       8: "fe'lun fe'lun",
       10: "fe'lun fe'lun fe'",
       12: "fe'lun fe'lun fe'lun",
@@ -491,7 +612,7 @@ class HinglishAnalyzer {
       20: "fe'lun fe'lun fe'lun fe'lun fe'lun"
     };
     
-    return descriptions[matraCount] || "विशेष पैटर्न";
+    return fallbackDescriptions[matraCount] || "विशेष पैटर्न";
   }
   
   // Main analysis function
@@ -572,8 +693,8 @@ class HinglishAnalyzer {
     return {
       status: "success",
       message: "आप की रचना निम्नलिखित बहर में है:",
-      bahrType: meterInfo.bahrType,
-      meterDescription: meterInfo.meterDescription,
+      bahrType: meterInfo.name,
+      meterDescription: meterInfo.desc,
       pattern: meterInfo.pattern,
       lines: lineResults,
       syllableAnalysis: allSyllableAnalysis

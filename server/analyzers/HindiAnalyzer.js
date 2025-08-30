@@ -253,12 +253,12 @@ class HindiAnalyzer {
     
     // Return Rekhta-style dynamic bahr detection based on matra count
     if (isConsistent) {
-      // All lines have same matra count - use specific matra count
+      // All lines have same matra count - use classical bahr names
       const bahrName = this.getClassicalBahrName(totalMatras, patternString);
       return {
         name: bahrName.name,
         desc: bahrName.desc,
-        pattern: this.createGenericPattern(weights),
+        pattern: [patternString], // Return single pattern for consistent lines
         confidence: bahrName.confidence
       };
     } else {
@@ -266,19 +266,23 @@ class HindiAnalyzer {
       const matraCounts = {};
       let maxCount = 0;
       let mostCommonMatras = totalMatras;
+      let mostCommonPattern = patternString;
       
       for (const lineData of allLinesPattern) {
         matraCounts[lineData.matras] = (matraCounts[lineData.matras] || 0) + 1;
         if (matraCounts[lineData.matras] > maxCount) {
           maxCount = matraCounts[lineData.matras];
           mostCommonMatras = lineData.matras;
+          mostCommonPattern = lineData.pattern;
         }
       }
       
-      // Use the most common matra count for naming (like Rekhta)
+      // Try to get classical name for most common pattern
+      const bahrName = this.getClassicalBahrName(mostCommonMatras, mostCommonPattern);
+      
       return {
-        name: `${mostCommonMatras} मात्रिक छंद`,
-        desc: "विशेष पैटर्न",
+        name: bahrName.name,
+        desc: bahrName.desc,
         pattern: allLinesPattern.map(line => line.pattern),
         confidence: 0.8
       };
@@ -289,73 +293,81 @@ class HindiAnalyzer {
   static getClassicalBahrName(totalMatras, patternString) {
     // Comprehensive classical Urdu/Hindi Bahr patterns matching Rekhta
     const classicalBahrs = {
-      // Common patterns by matra count
+      // Common patterns by matra count with proper classical names
       16: {
         '21212121': { 
-          name: "16 मात्रिक छंद", 
-          desc: "बह्र-ए-मुतकारिब मुसम्मन महज़ूफ़",
+          name: "मुतकारिब मुसम्मन महज़ूफ़", 
+          desc: "फ़इलुन फ़इलुन फ़इलुन फ़इलुन",
           confidence: 0.95
         },
         '22222222': { 
           name: "16 मात्रिक छंद", 
-          desc: "गुरु गुरु गुरु गुरु गुरु गुरु गुरु गुरु",
+          desc: "मफ़ऊलुन मफ़ऊलुन मफ़ऊलुन मफ़ऊलुन",
           confidence: 0.9
         }
       },
       18: {
         '212121212': { 
-          name: "18 मात्रिक छंद", 
-          desc: "बह्र-ए-रमल मुसम्मन महज़ूफ़",
+          name: "रमल मुसम्मन महज़ूफ़", 
+          desc: "फ़ाइलातुन फ़ाइलातुन फ़ाइलुन",
           confidence: 0.95
         },
         '222222222': { 
           name: "18 मात्रिक छंद", 
-          desc: "नौ गुरु छंद",
+          desc: "मफ़ऊलुन मफ़ऊलुन मफ़ऊलुन",
           confidence: 0.9
         }
       },
       20: {
         '21212121212': { 
-          name: "20 मात्रिक छंद", 
-          desc: "बह्र-ए-रमल मुसम्मन सालिम",
+          name: "रमल मुसम्मन सालिम", 
+          desc: "फ़ाइलातुन फ़ाइलातुन फ़ाइलातुन",
           confidence: 0.98
         },
         '2222222222': { 
           name: "20 मात्रिक छंद", 
-          desc: "दश गुरु छंद",
+          desc: "मफ़ऊलुन मफ़ऊलुन मफ़ऊलुन मफ़ऊलुन मफ़ऊ",
           confidence: 0.9
         }
       },
       22: {
         '2121212121212': { 
-          name: "22 मात्रिक छंद", 
-          desc: "बह्र-ए-मुतकारिब विस्तृत",
+          name: "मुतकारिब मुसम्मन सालिम", 
+          desc: "फ़इलुन फ़इलुन फ़इलुन फ़इलुन फ़इलुन फ़इ",
           confidence: 0.95
         }
       },
       24: {
         '212212212212': { 
-          name: "24 मात्रिक छंद", 
-          desc: "बह्र-ए-हज़ज मुसम्मन अख़रब मकतूफ़",
+          name: "हज़ज मुसम्मन अख़रब मकतूफ़", 
+          desc: "मफ़ाइलुन मफ़ाइलुन मफ़ाइलुन मफ़ाइलुन",
           confidence: 0.98
         },
         '212122212122': { 
-          name: "24 मात्रिक छंद", 
-          desc: "मुज्तस मुसम्मन मख़बून महज़ूफ़",
+          name: "मुज्तस मुसम्मन मख़बून महज़ूफ़", 
+          desc: "मुफ़ाइलुन फ़इलातुन मुफ़ाइलुन फ़ेलुन",
           confidence: 0.99
         }
       },
       26: {
         '21212212212122': { 
-          name: "26 मात्रिक छंद", 
-          desc: "मुज्तस मुसम्मन विस्तृत",
+          name: "मुज्तस मुसम्मन विस्तृत", 
+          desc: "मुफ़ाइलुन फ़इलातुन मुफ़ाइलुन फ़इलातुन फ़े",
           confidence: 0.95
         }
       },
       28: {
         '2122212221222122': { 
-          name: "28 मात्रिक छंद", 
-          desc: "बह्र-ए-कामिल मुसम्मन सालिम",
+          name: "कामिल मुसम्मन सालिम", 
+          desc: "मुतफ़ाइलुन मुतफ़ाइलुन मुतफ़ाइलुन मुतफ़ाइलुन",
+          confidence: 0.95
+        }
+      },
+      // Additional common patterns
+      14: {
+        '21222122212221': {
+          name: "मोक़तज़िब मुसम्मन मतवी मकतूफ़",
+          desc: "फ़ाइलात मफ़ऊलुन फ़ाइलात मफ़ऊलुन",
           confidence: 0.95
         }
       }
